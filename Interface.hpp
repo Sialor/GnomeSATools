@@ -1,7 +1,5 @@
 #pragma once
 
-#define DEBUG
-
 #define IMG 0
 #define TXD 1
 
@@ -10,6 +8,18 @@
 
 #include <string>
 #include <iostream>
+
+
+// ==============================
+//
+// Класс необходим для обработки запросов.
+//
+// Следует изменять строки std::clog
+// в соответствии с определениями методов
+//
+// В Windows Aaa.txt и aaa.txt и aAA.txt - одинаковые имена
+// ================================
+
 
 class Interface
 {

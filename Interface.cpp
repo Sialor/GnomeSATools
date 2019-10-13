@@ -1,18 +1,7 @@
-#include "Interface.h"
-
-// ==============================
-//
-// Класс необходим для обработки запросов.
-//
-// Следует изменять строки std::clog
-// в соответствии с определениями методов
-//
-// В Windows Aaa.txt и aaa.txt и aAA.txt - одинаковые имена
-// ================================
+#include "Interface.hpp"
 
 
 
-// Public:
 Interface::Interface(int argc, char** argv) : 
 	m_tool(255), m_command(255), m_countFiles(0), m_fileNames(nullptr)
 {
@@ -20,7 +9,7 @@ Interface::Interface(int argc, char** argv) :
 	{
 #ifdef DEBUG
 		std::cerr << "Exception \"Number of arguments less than 4\" "
-			"in Interface::Interface(int argc, char** argv) in class \"Interface\"\n";
+			"in Interface::Interface(" << argc << ", " << argv << ")\n";
 #endif
 
 		throw "Number of arguments less than 4";
@@ -57,7 +46,7 @@ Interface::Interface(int argc, char** argv) :
 				{
 #ifdef DEBUG
 					std::cerr << "Exception \"No such tool\" "
-						"in Interface::Interface(int argc, char** argv) in class \"Interface\"\n";
+						"in Interface::Interface(" << argc << ", " << argv << ")\n";
 #endif
 
 					throw "No such tool";
@@ -77,7 +66,7 @@ Interface::Interface(int argc, char** argv) :
 				{
 #ifdef DEBUG
 					std::cerr << "Exception \"No such command\" "
-						"in Interface::Interface(int argc, char** argv) in class \"Interface\"\n";
+						"in Interface::Interface(" << argc << ", " << argv << ")\n";
 #endif
 
 					throw "No such command";
@@ -105,7 +94,7 @@ Interface::Interface(int argc, char** argv) :
 	}
 
 #ifdef DEBUG
-	std::clog << "Interface::Interface(int argc, char** argv) in class \"Interface\"\n";
+	std::clog << "Interface::Interface(" << argc << ", " << argv << ")\n";
 #endif
 }
 

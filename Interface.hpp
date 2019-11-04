@@ -1,13 +1,15 @@
 #pragma once
 
+#include <iostream>
+#include <string>
+
+#include "Settings.hpp"
+
 #define IMG 0
 #define TXD 1
 
 #define PACK 0
 #define UNPACK 1
-
-#include <string>
-#include <iostream>
 
 
 // ==============================
@@ -24,13 +26,21 @@
 class Interface
 {
 private:
-	char m_tool;
+	unsigned char m_tool;
 
-	char m_command;
+	unsigned char m_command;
 
-	char m_countFiles;
+	unsigned char m_numberOfFiles;
 
-	std::string *m_fileNames;
+	unsigned char m_numberOfParams;
+
+	// Входные пути
+	// Могут быть как директорий так и имена файлов
+	std::string *m_inputPaths;
+
+	// Выходной путь
+	// Может быть ТОЛЬКО директория
+	std::string m_outputFolderPath;
 public:
 	Interface(int, char**);
 

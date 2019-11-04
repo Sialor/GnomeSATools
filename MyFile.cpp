@@ -1,5 +1,7 @@
 #include "MyFile.hpp"
 
+#include <fstream>
+
 MyFile::MyFile() : m_size(0), m_index(0), m_data(nullptr)
 	/*Сначала списки инициализации, потом выполняется конструктор*/
 {
@@ -25,7 +27,7 @@ MyFile::~MyFile()
 	}
 
 #ifdef DEBUG
-	std::clog << "~MyFile()\n";
+	std::clog << "MyFile::~MyFile()\n";
 #endif
 }
 
@@ -48,6 +50,11 @@ void MyFile::copyDataFromFile(std::string fileName)
 	
 	m_size = file.tellg();
 
+	if (m_data != nullptr)
+	{
+		delete[] m_data;
+	}
+
 	m_data = new char[m_size];
 
 	file.seekg(0, std::ios::beg);
@@ -55,6 +62,8 @@ void MyFile::copyDataFromFile(std::string fileName)
 	file.read(m_data, m_size);
 
 	file.close();
+
+	m_index = 0;
 
 #ifdef DEBUG
 	std::clog << "void MyFile::copyDataFromFile(" << fileName << ")\n";
@@ -96,17 +105,19 @@ void MyFile::copyDataToFile(std::string fileName)
 
 
 
-void MyFile::readUCharP(unsigned char *cstr, unsigned char count)
+void MyFile::readUCharP(char *cstr, unsigned long long count)
 {
 	isIndexOverflow(m_index + count);
 
-	for (unsigned int i = 0; i < count; ++i)
+	for (unsigned long long i = 0; i < count; ++i)
 	{
 		cstr[i] = m_data[m_index + i];
 	}
 
+	m_index += count;
+
 #ifdef DEBUG
-	std::clog << "void MyFile::readUCharP(" << cstr << ", " << count << ")\n";
+	std::clog << "void MyFile::readUCharP( [DATA] , " << (int)count << ")\n";
 #endif
 }
 
@@ -131,8 +142,8 @@ unsigned short MyFile::readUShort()
 
 	unsigned short value(0);
 
-	value = (m_data[m_index + 1] << 8) + 
-			 m_data[m_index + 0];
+	value = ((unsigned char)(m_data[m_index + 1]) << 8) + 
+			(unsigned char)(m_data[m_index + 0]);
 
 	m_index += 2;
 
@@ -151,10 +162,10 @@ unsigned int MyFile::readUInt()
 
 	unsigned int value(0);
 
-	value = (m_data[m_index + 3] << 24) +
-			(m_data[m_index + 2] << 16) +
-			(m_data[m_index + 1] << 8) +
-			 m_data[m_index + 0];
+	value = ((unsigned char)(m_data[m_index + 3]) << 24) +
+			((unsigned char)(m_data[m_index + 2]) << 16) +
+			((unsigned char)(m_data[m_index + 1]) << 8) +
+			(unsigned char)(m_data[m_index + 0]);
 
 	m_index += 4;
 
@@ -167,7 +178,7 @@ unsigned int MyFile::readUInt()
 
 
 
-void MyFile::writeUCharP(unsigned char *cstr, unsigned char count)
+void MyFile::writeUCharP(char *cstr, unsigned long long count)
 {
 	isIndexOverflow(m_index + count);
 
@@ -176,8 +187,10 @@ void MyFile::writeUCharP(unsigned char *cstr, unsigned char count)
 		m_data[m_index + i] = cstr[i];
 	}
 
+	m_index += count;
+
 #ifdef DEBUG
-	std::clog << "void MyFile::writeUCharP(" << cstr << ", " << count << ")\n";
+	std::clog << "void MyFile::writeUCharP( [DATA] , " << (int)count << ")\n";
 #endif
 }
 
@@ -232,7 +245,7 @@ void MyFile::writeUInt(unsigned int value)
 
 
 
-void MyFile::insertBytes(unsigned int count)
+void MyFile::insertBytes(unsigned long long count)
 {
 	if (count == 0)
 	{
@@ -241,12 +254,12 @@ void MyFile::insertBytes(unsigned int count)
 
 	char* data = new char[m_size + count];
 
-	for (unsigned int i(0); i < m_index; ++i)
+	for (unsigned long long i(0); i < m_index; ++i)
 	{
 		data[i] = m_data[i];
 	}
 
-	for (unsigned int i(m_index); i < m_size; ++i)
+	for (unsigned long long i(m_index); i < m_size; ++i)
 	{
 		data[i + count] = m_data[i];
 	}
@@ -271,7 +284,7 @@ void MyFile::insertBytes(unsigned int count)
 
 
 
-void MyFile::removeBytes(int count)
+void MyFile::removeBytes(long long count)
 {
 	if (count == 0)
 	{
@@ -282,12 +295,12 @@ void MyFile::removeBytes(int count)
 
 	char* data = new char[m_index - abs(count) == 0 ? 1 : m_index - abs(count)];
 
-	for (unsigned int i(0); i < m_index - abs(count); ++i)
+	for (unsigned long long i(0); i < m_index - abs(count); ++i)
 	{
 		data[i] = m_data[i];
 	}
 
-	for (unsigned int i(m_index); i < m_size; ++i)
+	for (unsigned long long i(m_index); i < m_size; ++i)
 	{
 		data[i - abs(count)] = m_data[i];
 	}
@@ -313,7 +326,7 @@ void MyFile::removeBytes(int count)
 
 
 
-void MyFile::goToByte(unsigned int position)
+void MyFile::goToByte(unsigned long long position)
 {
 	isIndexOverflow(position);
 
@@ -326,7 +339,7 @@ void MyFile::goToByte(unsigned int position)
 
 
 
-void MyFile::skipBytes(int size)
+void MyFile::skipBytes(long long size)
 {
 	isIndexOverflow(m_index + size);
 
@@ -339,7 +352,7 @@ void MyFile::skipBytes(int size)
 
 
 
-unsigned int MyFile::getIndex()
+unsigned long long MyFile::getIndex()
 {
 #ifdef DEBUG
 	std::clog << "unsigned int MyFile::getPosition()\n";
@@ -348,11 +361,62 @@ unsigned int MyFile::getIndex()
 	return m_index;
 }
 
-unsigned int MyFile::getSize()
+
+
+unsigned long long MyFile::getSize()
 {
 #ifdef DEBUG
-	std::clog << "unsigned int MyFile::getSize()\n";
+	std::clog << "long long MyFile::getSize()\n";
 #endif
 
 	return m_size;
+}
+
+
+
+unsigned long long MyFile::getSizeFile(std::string fileName)
+{
+	std::ifstream file;
+
+	file.open(fileName);
+
+	if (!file.is_open())
+	{
+#ifdef DEBUG
+		std::cerr << "Exception \"Could not open file\" "
+			"in unsigned long long getSizeFile(" << fileName << ") in class \"MyFile\"\n";
+#endif
+		throw "Could not open file";
+	}
+
+	file.seekg(0, std::ios::end);
+
+	return file.tellg();
+}
+
+
+
+void MyFile::createData(unsigned long long count)
+{
+	if (count == 0)
+	{
+#ifdef DEBUG
+		std::cerr << "Exception \"Cannot create an array of size 0\" "
+			"in void MyFile::createData(" << count << ")\n";
+#endif
+		throw "Cannot create an array of size 0";
+	}
+
+	if (m_data != nullptr)
+	{
+		delete[] m_data;
+	}
+
+	m_data = new char[count];
+	m_size = count;
+	m_index = 0;
+
+#ifdef DEBUG
+	std::clog << "void MyFile::createData(" << count << ")\n";
+#endif
 }

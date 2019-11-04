@@ -1,10 +1,11 @@
 #pragma once
 
-#include <string>
-#include <fstream>
 #include <iostream>
+#include <string>
+#include <Windows.h>
 
-#define DEBUG
+#include "Settings.hpp"
+
 
 // ==============================
 //
@@ -21,10 +22,10 @@
 class MyFile
 {
 private:
-	unsigned int m_size;
+	unsigned long long m_size;
 
 	// Включая этот байт, с какого байта происходит чтение/запись
-	unsigned int m_index;
+	unsigned long long m_index;
 
 	char* m_data;
 
@@ -36,17 +37,17 @@ private:
 	// Этот метод закрыт, поскольку работает
 	// исключительно внутри класса.
 	// Принимает индекс который проверяется на диапазон
-	void isIndexOverflow(unsigned int index)
+	void isIndexOverflow(unsigned long long index)
 	{
 		// index == m_size - значит что чтение/запись происходит в "притык"
 		if (index > m_size)
 		{
 #ifdef DEBUG
 			std::cerr << "Exception \"Overflow index\" "
-				"in void isIndexOverflow(unsigned char size) in class \"MyFile\"\n";
+				"in void isIndexOverflow(" << index << ") in class \"MyFile\"\n";
 #endif
 
-			throw "Overflow index (m_position >= m_szie)";
+			throw "Overflow index (m_index >= m_szie)";
 		}
 	}
 public:
@@ -66,10 +67,10 @@ public:
 
 
 
-	// Чтение из памяти Си строку в n байт
+	// Чтение из памяти n байт
 	// Ничего не возвращает, поскольку
 	// результат возвращается в первом аргументе
-	void readUCharP(unsigned char *, unsigned char);
+	void readUCharP(char *, unsigned long long);
 
 
 
@@ -91,8 +92,8 @@ public:
 
 
 
-	// Запись в память Си строки n байт
-	void writeUCharP(unsigned char *, unsigned char);
+	// Запись в память n байт
+	void writeUCharP(char *, unsigned long long);
 
 
 
@@ -111,36 +112,47 @@ public:
 
 
 
-	// Вставить в память n байт с позиции m_position
+	// Вставить в память n байт с позиции m_index
 	// Принимает только положительные числа
 	// Размер занимаемой области по формуле
 	// 2 * file_size + insert_data_size
-	void insertBytes(unsigned int);
+	void insertBytes(unsigned long long);
 
 
 
-	// Удалить из памяти n байт с позиции m_position
+	// Удалить из памяти n байт с позиции m_index
 	// Принимает как положительные так и отрицательные
-	void removeBytes(int);
+	void removeBytes(long long);
 
 
 	
 	// Перевод каретки на указанную позицию
-	void goToByte(unsigned int);
+	void goToByte(unsigned long long);
 	
 
 
 	// Пропускает n-ое количество байт
 	// Может принимать отрицательные значения для перемещения назад
-	void skipBytes(int);
+	void skipBytes(long long);
 
 
 
 	// Получение позиции
-	unsigned int getIndex();
+	unsigned long long getIndex();
 
 
 
 	// Получение размера файла
-	unsigned int getSize();
+	unsigned long long getSize();
+
+
+
+	// Получение размера файла указанного в аргменте
+	static unsigned long long getSizeFile(std::string);
+
+
+
+	// Установка количества байт в m_data
+	// Принимает количество байт, только положительные
+	void createData(unsigned long long);
 };

@@ -1,20 +1,18 @@
-//#include "Interface.hpp"
-#include "MyFile.hpp"
+#include "Interface.hpp"
 
-int main(int argc, char **argv)
+// img unpack D:\Projects\cpp\GnomeSATools\img\cutscene.img -O D:\Projects\cpp\GnomeSATools
+// img pack D:\Projects\cpp\GnomeSATools\cutscene -O D:\Projects\cpp\GnomeSATools
+int main(int argc, char** argv)
 {
-	const char *_argv[] = {".exe", "img", "pack", "player.img", "gta3.img" };
-
-	// Следует проверить работоспособность класса Interface
-	//Interface interface(5, (char**)_argv);
-	MyFile file;
-
-	file.copyDataFromFile("data.bin");
-	file.writeUShort(256);
-	file.copyDataToFile("data.bin2");
-	file.copyDataFromFile("data.bin2");
-	file.goToByte(0);
-	std::cout << file.readUShort() << '\n';
+	Interface interface(argc, argv);
 
 	return 0;
 }
+
+
+
+// Исправлена утечка памяти. Исрпавлено чтение данных из файлов. Исрпавлен тип данных ввода/вывода Си строк/
+// Си строки заменены на std::string
+// Добавлена запаковка img архивов
+// Поправлены передачи путей и файлов
+// Добавлен аргумент -o для вывода в определенную директорию

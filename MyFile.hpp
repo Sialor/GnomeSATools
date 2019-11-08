@@ -152,6 +152,11 @@ public:
 
 
 
+	// ¬озвращает указатель на данные в пам€ти с номером
+	char* getPointerData(unsigned long long);
+
+
+
 	// ”становка количества байт в m_data
 	// ѕринимает количество байт, только положительные
 	void createData(unsigned long long);

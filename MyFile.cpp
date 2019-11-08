@@ -396,6 +396,15 @@ unsigned long long MyFile::getSizeFile(std::string fileName)
 
 
 
+char *MyFile::getPointerData(unsigned long long index=0)
+{
+	isIndexOverflow(m_index + index);
+
+	return m_data + index;
+}
+
+
+
 void MyFile::createData(unsigned long long count)
 {
 	if (count == 0)

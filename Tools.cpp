@@ -45,17 +45,17 @@ void ImgUnpack(std::string fileName, std::string outputFolderPath)
 	MyFile output;
 
 
+	std::string outputFolderPathWithFileName = (outputFolderPath + fileName.substr(fileName.find_last_of('/') + 1));
+	outputFolderPathWithFileName = outputFolderPathWithFileName.substr(0, outputFolderPathWithFileName.find_last_of('.'));
+
 	// Создание папки
 #ifndef LINUX
-	// Возможно ошибка в количестве символов
-	//system((std::string("mkdir ") + fileName.substr(0, start) + folderName).c_str());
-
 	// Проверка наличия директории
-	DWORD dwAttrib = GetFileAttributes(outputFolderPath.c_str());
+	DWORD dwAttrib = GetFileAttributes(outputFolderPathWithFileName.c_str());
 
-	if ((dwAttrib == INVALID_FILE_ATTRIBUTES) && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY))
+	if (dwAttrib == INVALID_FILE_ATTRIBUTES)
 	{
-		if (CreateDirectory(pathFolderWithFileName.c_str(), NULL) == 0)
+		if (CreateDirectory(outputFolderPathWithFileName.c_str(), NULL) == 0)
 		{
 #ifdef DEBUG
 			std::cerr << "Exception \"Folder not created\" "
@@ -101,11 +101,15 @@ void ImgUnpack(std::string fileName, std::string outputFolderPath)
 		output.createData(size * 2048ULL);
 		output.writeUCharP(fileData, size * 2048ULL);
 		output.copyDataToFile(pathFolderWithFileName + '/' + outputFileName);
+
+		delete[] fileData;
 	}
 
 #ifdef DEBUG
 	std::clog << "void ImgUnpack(" << fileName << ", " << outputFolderPath << ")\n";
 #endif
+
+	return;
 }
 
 
@@ -259,11 +263,15 @@ void ImgPack(std::string inputFolderPath, std::string outputFolderPath)
 		input.readUCharP(fileData, size);
 
 		output.writeUCharP(fileData, size);
+
+		delete[] fileData;
 	}
 
 	inputFolderPath.pop_back();
 
 	output.copyDataToFile(outputFolderPath + inputFolderPath.substr(inputFolderPath.rfind("/") + 1) + ".img");
+
+	delete[] inputFileNames;
 
 #ifdef DEBUG
 	std::clog << "void ImgPack(" << inputFolderPath << ", " << outputFolderPath << ")\n";

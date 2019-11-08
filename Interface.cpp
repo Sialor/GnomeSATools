@@ -144,6 +144,7 @@ Interface::Interface(int argc, char** argv) :
 		{
 			if (m_command == UNPACK)
 			{
+				// днкфем ашрэ бшбнд врн ме бепмше юпцслемрш х опнярни бшунд (exit(1);) хг опнцпюллш !!!!!!
 #ifdef DEBUG
 				std::cerr << "Exception \"Invalid file extension\" "
 					"in Interface::Interface(" << argc << ", [PROGRAM ARGUMENTS])\n";

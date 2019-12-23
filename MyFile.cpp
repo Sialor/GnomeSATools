@@ -5,7 +5,7 @@
 MyFile::MyFile() : m_size(0), m_index(0), m_data(nullptr)
 	/*Сначала списки инициализации, потом выполняется конструктор*/
 {
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "MyFile::MyFile()\n";
 #endif
 }
@@ -14,7 +14,7 @@ MyFile::MyFile(std::string fileName) : MyFile()
 {
 	this->copyDataFromFile(fileName);
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "MyFile::MyFile(" << fileName << ")\n";
 #endif
 }
@@ -26,7 +26,7 @@ MyFile::~MyFile()
 		delete[] m_data;
 	}
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "MyFile::~MyFile()\n";
 #endif
 }
@@ -35,37 +35,73 @@ MyFile::~MyFile()
 
 void MyFile::copyDataFromFile(std::string fileName)
 {
-	std::ifstream file(fileName, std::ios::binary);
-
-	if (!file.is_open())
+	if (m_isNotStream)
 	{
-#ifdef DEBUG
-		std::cerr << "Exception \"The file for some reason does not open\" "
-			"in void MyFile::copyDataFromFile(" << fileName << ")\n";
+		m_size = getSizeFile(fileName);
+
+		HANDLE file = CreateFile(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+		if (file == INVALID_HANDLE_VALUE)
+		{
+#ifdef MY_DEBUG
+			std::cerr << "Exception \"The file for some reason does not open\" "
+				"in void MyFile::copyDataFromFile(" << fileName << ")\n";
 #endif
-		throw "The file for some reason does not open";
+			throw "The file for some reason does not open";
+		}
+
+		// Высвобождаем память в m_data
+		if (m_data != nullptr)
+		{
+			delete[] m_data;
+		}
+
+		// Создаем пустые данные
+		m_data = new char[m_size];
+
+		// Читаем все данные
+		DWORD realRead(0);
+
+		ReadFile(file, m_data, m_size, &realRead, NULL);
+
+		// Закрываем файл
+		CloseHandle(file);
+
+		m_index = 0;
 	}
-
-	file.seekg(0, std::ios::end);
-	
-	m_size = file.tellg();
-
-	if (m_data != nullptr)
+	else
 	{
-		delete[] m_data;
+		std::ifstream file(fileName, std::ios::binary);
+
+		if (!file.is_open())
+		{
+#ifdef MY_DEBUG
+			std::cerr << "Exception \"The file for some reason does not open\" "
+				"in void MyFile::copyDataFromFile(" << fileName << ")\n";
+#endif
+			throw "The file for some reason does not open";
+		}
+
+		m_size = getSizeFile(fileName);
+
+		if (m_data != nullptr)
+		{
+			delete[] m_data;
+		}
+
+		m_data = new char[m_size];
+
+		file.seekg(0, std::ios::beg);
+
+		file.read(m_data, m_size);
+
+		file.close();
+
+		m_index = 0;
 	}
 
-	m_data = new char[m_size];
-
-	file.seekg(0, std::ios::beg);
-	
-	file.read(m_data, m_size);
-
-	file.close();
-
-	m_index = 0;
-
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "void MyFile::copyDataFromFile(" << fileName << ")\n";
 #endif
 }
@@ -74,31 +110,62 @@ void MyFile::copyDataFromFile(std::string fileName)
 
 void MyFile::copyDataToFile(std::string fileName)
 {
-	if (m_data == nullptr)
+	if (m_isNotStream)
 	{
-#ifdef DEBUG
-		std::cerr << "Exception \"Before writing a file, you must open this file in RAM\" "
-			"in void MyFile::copyDataToFile(" << fileName << ")\n";
+		if (m_data == nullptr)
+		{
+#ifdef MY_DEBUG
+			std::cerr << "Exception \"Before writing a file, you must open this file in RAM\" "
+				"in void MyFile::copyDataToFile(" << fileName << ")\n";
 #endif
-		throw "The file for some reason does not open";
+			throw "The file for some reason does not open";
+		}
+
+		HANDLE file = CreateFile(fileName.c_str(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+			CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+		//// убрать после дебага
+		//std::cout << std::hex << file << std::dec << std::endl;
+		//std::cout << GetLastError() << std::endl;
+
+		//system("pause");
+
+		if (file == INVALID_HANDLE_VALUE)
+		{
+#ifdef MY_DEBUG
+			std::cerr << "Exception \"The file for some reason does not open\" "
+				"in void MyFile::copyDataToFile(" << fileName << ")\n";
+#endif
+			throw "The file for some reason does not open";
+		}
+
+		// Пишем все данные
+		DWORD realWrite(0);
+
+		WriteFile(file, m_data, m_size, &realWrite, NULL);
+
+		// Закрываем файл
+		CloseHandle(file);
+	}
+	else
+	{
+		std::ofstream file(fileName, std::ios::binary);
+
+		if (!file.is_open())
+		{
+#ifdef MY_DEBUG
+			std::cerr << "Exception \"The file for some reason does not open\" "
+				"in void MyFile::copyDataToFile(" << fileName << ")\n";
+#endif
+			throw "The file for some reason does not open";
+		}
+
+		file.write(m_data, m_size);
+
+		file.close();
 	}
 
-	std::ofstream file(fileName, std::ios::binary);
-
-	if (!file.is_open())
-	{
-#ifdef DEBUG
-		std::cerr << "Exception \"The file for some reason does not open\" "
-			"in void MyFile::copyDataToFile(" << fileName << ")\n";
-#endif
-		throw "The file for some reason does not open";
-	}
-
-	file.write(m_data, m_size);
-
-	file.close();
-
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "void MyFile::copyDataToFile(" << fileName << ")\n";
 #endif
 }
@@ -116,7 +183,7 @@ void MyFile::readUCharP(char *cstr, unsigned long long count)
 
 	m_index += count;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "void MyFile::readUCharP( [DATA] , " << (int)count << ")\n";
 #endif
 }
@@ -127,7 +194,7 @@ unsigned char MyFile::readUChar()
 {
 	isIndexOverflow(m_index);
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "unsigned char MyFile::readUChar()\n";
 #endif
 
@@ -147,7 +214,7 @@ unsigned short MyFile::readUShort()
 
 	m_index += 2;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "unsigned short MyFile::readUShort()\n";
 #endif
 
@@ -169,7 +236,7 @@ unsigned int MyFile::readUInt()
 
 	m_index += 4;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "unsigned int MyFile::readUInt()\n";
 #endif
 
@@ -189,7 +256,7 @@ void MyFile::writeUCharP(char *cstr, unsigned long long count)
 
 	m_index += count;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "void MyFile::writeUCharP( [DATA] , " << (int)count << ")\n";
 #endif
 }
@@ -204,7 +271,7 @@ void MyFile::writeUChar(unsigned char value)
 
 	++m_index;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "void MyFile::writeUChar(" << value << ")\n";
 #endif
 }
@@ -220,7 +287,7 @@ void MyFile::writeUShort(unsigned short value)
 
 	m_index += 2;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "void MyFile::writeUShort(" << value << ")\n";
 #endif
 }
@@ -238,7 +305,7 @@ void MyFile::writeUInt(unsigned int value)
 
 	m_index += 4;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "void MyFile::writeUInt(" << value << ")\n";
 #endif
 }
@@ -277,7 +344,7 @@ void MyFile::insertBytes(unsigned long long count)
 	// Вместо этой строчки можно использовать skip
 	//m_index += count;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "void MyFile::insertBytes(" << count << ")\n";
 #endif
 }
@@ -319,7 +386,7 @@ void MyFile::removeBytes(long long count)
 
 	m_data = data;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "void MyFile::removeBytes(" << count << ")\n";
 #endif
 }
@@ -332,7 +399,7 @@ void MyFile::goToByte(unsigned long long position)
 
 	m_index = position;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "void MyFile::goToByte(" << position << ")\n";
 #endif
 }
@@ -345,7 +412,7 @@ void MyFile::skipBytes(long long size)
 
 	m_index += size;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "void MyFile::skipBytes(" << size << ")\n";
 #endif
 }
@@ -354,7 +421,7 @@ void MyFile::skipBytes(long long size)
 
 unsigned long long MyFile::getIndex()
 {
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "unsigned int MyFile::getPosition()\n";
 #endif
 
@@ -363,9 +430,9 @@ unsigned long long MyFile::getIndex()
 
 
 
-unsigned long long MyFile::getSize()
+unsigned long long& MyFile::getSize()
 {
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "long long MyFile::getSize()\n";
 #endif
 
@@ -376,29 +443,67 @@ unsigned long long MyFile::getSize()
 
 unsigned long long MyFile::getSizeFile(std::string fileName)
 {
-	std::ifstream file;
-
-	file.open(fileName);
-
-	if (!file.is_open())
+	if (m_isNotStream)
 	{
-#ifdef DEBUG
-		std::cerr << "Exception \"Could not open file\" "
-			"in unsigned long long getSizeFile(" << fileName << ") in class \"MyFile\"\n";
+		HANDLE file = CreateFile(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+		if (file == INVALID_HANDLE_VALUE)
+		{
+#ifdef MY_DEBUG
+			std::cerr << "Exception \"Could not open file\" "
+				"in unsigned long long getSizeFile(" << fileName << ") in class \"MyFile\"\n";
 #endif
-		throw "Could not open file";
+			throw "Could not open file";
+		}
+
+		LARGE_INTEGER size = {0};
+
+		GetFileSizeEx(file, &size);
+
+		if (size.LowPart == 0 && size.HighPart == 0)
+		{
+#ifdef MY_DEBUG
+			std::cerr << "Exception \"Can not find out the file size\" "
+				"in unsigned long long getSizeFile(" << fileName << ") in class \"MyFile\"\n";
+#endif
+			throw "Can not find out the file size";
+		}
+
+		CloseHandle(file);
+
+		return (size.HighPart * 0x0000000100000000) + size.LowPart;
 	}
+	else
+	{
+		std::ifstream file;
 
-	file.seekg(0, std::ios::end);
+		file.open(fileName);
 
-	return file.tellg();
+		if (!file.is_open())
+		{
+#ifdef MY_DEBUG
+			std::cerr << "Exception \"Could not open file\" "
+				"in unsigned long long getSizeFile(" << fileName << ") in class \"MyFile\"\n";
+#endif
+			throw "Could not open file";
+		}
+
+		file.seekg(0, std::ios::end);
+
+		unsigned int size = file.tellg();
+
+		file.close();
+
+		return size;
+	}
 }
 
 
 
-char *MyFile::getPointerData(unsigned long long index=0)
+char *MyFile::getPointerData(unsigned long long index)
 {
-	isIndexOverflow(m_index + index);
+	isIndexOverflow(index + 1);
 
 	return m_data + index;
 }
@@ -409,23 +514,41 @@ void MyFile::createData(unsigned long long count)
 {
 	if (count == 0)
 	{
-#ifdef DEBUG
+#ifdef MY_DEBUG
 		std::cerr << "Exception \"Cannot create an array of size 0\" "
 			"in void MyFile::createData(" << count << ")\n";
 #endif
 		throw "Cannot create an array of size 0";
 	}
 
-	if (m_data != nullptr)
+	if (count > m_size)
 	{
-		delete[] m_data;
+		if (m_data != nullptr)
+		{
+			delete[] m_data;
+		}
+
+		m_data = new char[count];
 	}
 
-	m_data = new char[count];
 	m_size = count;
 	m_index = 0;
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "void MyFile::createData(" << count << ")\n";
 #endif
+}
+
+
+
+bool MyFile::getIsNotStream()
+{
+	return m_isNotStream;
+}
+
+
+
+void MyFile::setIsNotStream(bool flag)
+{
+	m_isNotStream = flag;
 }

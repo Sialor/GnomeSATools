@@ -1,4 +1,4 @@
 #pragma once
 
-//#define DEBUG
+//#define MY_DEBUG
 //#define LINUX

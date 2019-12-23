@@ -5,15 +5,7 @@
 
 #include "Settings.hpp"
 
-#ifndef LINUX
-// NTFS
-// 255 символов - макс длинна названия файла
-#define MAX_LENGTH_FILENAME 255
-#else
-// FAT32
-// 255 байт - макс длинна названия файла
-#define MAX_LENGTH_FILENAME 255
-#endif
+
 
 // ==============================
 //

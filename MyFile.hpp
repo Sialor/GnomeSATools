@@ -29,6 +29,10 @@ private:
 
 	char* m_data;
 
+	// Флаг определяющий
+	// какой метод работы с файлами
+	static bool m_isNotStream;
+
 
 
 	// Производит проверку на то,
@@ -42,11 +46,10 @@ private:
 		// index == m_size - значит что чтение/запись происходит в "притык"
 		if (index > m_size)
 		{
-#ifdef DEBUG
+#ifdef MY_DEBUG
 			std::cerr << "Exception \"Overflow index\" "
 				"in void isIndexOverflow(" << index << ") in class \"MyFile\"\n";
 #endif
-
 			throw "Overflow index (m_index >= m_szie)";
 		}
 	}
@@ -116,12 +119,15 @@ public:
 	// Принимает только положительные числа
 	// Размер занимаемой области по формуле
 	// 2 * file_size + insert_data_size
+	// Не стоит злоупотреблять методом (например в цикле)
+	// поскольку он очень ресурсозатратный
 	void insertBytes(unsigned long long);
 
 
 
 	// Удалить из памяти n байт с позиции m_index
 	// Принимает как положительные так и отрицательные
+	// Отрицательные берутся по модулю
 	void removeBytes(long long);
 
 
@@ -143,7 +149,7 @@ public:
 
 
 	// Получение размера файла
-	unsigned long long getSize();
+	unsigned long long& getSize();
 
 
 
@@ -153,11 +159,22 @@ public:
 
 
 	// Возвращает указатель на данные в памяти с номером
-	char* getPointerData(unsigned long long);
+	// НЕ БЕЗОПАСНЫЙ МЕТОД
+	char* getPointerData(unsigned long long index=0);
 
 
 
 	// Установка количества байт в m_data
 	// Принимает количество байт, только положительные
 	void createData(unsigned long long);
+
+
+
+	// Возвращает флаг isNotStream
+	static bool getIsNotStream();
+
+
+
+	// Устанавливает флаг isNotStream в указанное значение
+	static void setIsNotStream(bool);
 };

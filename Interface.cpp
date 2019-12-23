@@ -6,11 +6,10 @@ Interface::Interface(int argc, char** argv) :
 {
 	if (argc < 4)
 	{
-#ifdef DEBUG
+#ifdef MY_DEBUG
 		std::cerr << "Exception \"Number of arguments less than 4\" "
 			"in Interface::Interface(" << argc << ", [PROGRAM ARGUMENTS])\n";
 #endif
-
 		throw "Number of arguments less than 4";
 	}
 
@@ -57,11 +56,10 @@ Interface::Interface(int argc, char** argv) :
 			}
 			else
 			{
-#ifdef DEBUG
+#ifdef MY_DEBUG
 				std::cerr << "Exception \"No such tool\" "
 					"in Interface::Interface(" << argc << ", [PROGRAM ARGUMENTS])\n";
 #endif
-
 				throw "No such tool";
 			}
 		}
@@ -77,7 +75,7 @@ Interface::Interface(int argc, char** argv) :
 			}
 			else
 			{
-#ifdef DEBUG
+#ifdef MY_DEBUG
 				std::cerr << "Exception \"No such command\" "
 					"in Interface::Interface(" << argc << ", [PROGRAM ARGUMENTS])\n";
 #endif
@@ -122,7 +120,7 @@ Interface::Interface(int argc, char** argv) :
 			// ×òîáû ñëåäóþùèé àðãóìåíò áûë ïðîïóùåí
 			if (i + 1 >= argc)
 			{
-#ifdef DEBUG
+#ifdef MY_DEBUG
 				std::cerr << "Exception \"No input folder path entered\" "
 					"in Interface::Interface(" << argc << ", [PROGRAM ARGUMENTS])\n";
 #endif
@@ -145,7 +143,7 @@ Interface::Interface(int argc, char** argv) :
 			if (m_command == UNPACK)
 			{
 				// ÄÎËÆÅÍ ÁÛÒÜ ÂÛÂÎÄ ×ÒÎ ÍÅ ÂÅÐÍÛÅ ÀÐÃÓÌÅÍÒÛ È ÏÐÎÑÒÎÉ ÂÛÕÎÄ (exit(1);) ÈÇ ÏÐÎÃÐÀÌÌÛ !!!!!!
-#ifdef DEBUG
+#ifdef MY_DEBUG
 				std::cerr << "Exception \"Invalid file extension\" "
 					"in Interface::Interface(" << argc << ", [PROGRAM ARGUMENTS])\n";
 #endif
@@ -189,7 +187,7 @@ Interface::Interface(int argc, char** argv) :
 		}
 	}
 
-#ifdef DEBUG
+#ifdef MY_DEBUG
 	std::clog << "Interface::Interface(" << argc << ", [PROGRAM ARGUMENTS])\n";
 #endif
 }

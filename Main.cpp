@@ -13,10 +13,18 @@
 
 // !!оепеапняхрэ йкюяя MyFile б дпсцни опнейр х опхянедхмхрэ ецн й щрнлс опнейрс
 
-// img unpack D:\Projects\cpp\GnomeSATools\img\cutscene.img -O D:\Projects\cpp\GnomeSATools
-// img pack D:\Projects\cpp\GnomeSATools\cutscene -O D:\Projects\cpp\GnomeSATools
+// img pack "D:\Steam\steamapps\common\Grand Theft Auto San Andreas/unpacked/models\player/" -o "D:\Steam\steamapps\common\Grand Theft Auto San Andreas\models"
+// img unpack "D:\Steam\steamapps\common\Grand Theft Auto San Andreas/models\player.img" -o "D:\Steam\steamapps\common\Grand Theft Auto San Andreas\unpacked/models"
 int main(int argc, char** argv)
 {
-	Interface interface(argc, argv);
+	try
+	{
+		Interface interface(argc, argv);
+	}
+	catch (...)
+	{
+		
+	}
+
 	return 0;
 }

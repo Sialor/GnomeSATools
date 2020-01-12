@@ -24,17 +24,15 @@ void ImgUnpack(std::string fileName, std::string outputFolderPath)
 	MyFile input(fileName);
 
 	// Чтение 4 байт, там версия файла
-	char signature[5];
+	char signature[5] = "";
 
 	input.readUCharP(signature, 4);
 
 	// Проверка версии
 	if (std::string(signature) != "VER2")
 	{
-#ifdef MY_DEBUG
 		std::cerr << "Exception \"Signature mismatch\" "
 			"void ImgUnpack(" << fileName << ", " << outputFolderPath << ")\n";
-#endif
 
 		throw "Signature mismatch";
 	}
@@ -61,12 +59,25 @@ void ImgUnpack(std::string fileName, std::string outputFolderPath)
 
 	if (dwAttrib == INVALID_FILE_ATTRIBUTES)
 	{
-		if (CreateDirectory(outputFolderPathWithFileName.c_str(), NULL) == 0)
+		int error = CreateDirectory(outputFolderPathWithFileName.c_str(), NULL);
+		
+		if (error == ERROR_ALREADY_EXISTS)
 		{
 #ifdef MY_DEBUG
+			std::clog << "Directory is exist\n";
+#endif
+		}
+		else if (error == ERROR_PATH_NOT_FOUND)
+		{
+#ifdef MY_DEBUG
+			std::clog << "Directory is exist\n";
+#endif
+		}
+		else if (error == 0)
+		{
 			std::cerr << "Exception \"Folder not created\" "
 				"void ImgUnpack(" << fileName << ", " << outputFolderPath << ")\n";
-#endif
+
 			throw "Folder not created";
 		}
 	}
@@ -123,9 +134,6 @@ void ImgUnpack(std::string fileName, std::string outputFolderPath)
 
 void ImgPack(std::string inputFolderPath, std::string outputFolderPath)
 {
-	// Массив с именами файлов
-	std::string *inputFileNames(nullptr);
-
 	// Создать файл вывода
 	MyFile output;
 
@@ -141,81 +149,36 @@ void ImgPack(std::string inputFolderPath, std::string outputFolderPath)
 	// Собрать количество файлов
 	unsigned int numberOfFiles(0);
 
-	// Имена в одной строке
-	std::string inputFileNamesStr;
-
-	unsigned int *arraySizeInBlocks;
-
 	// Проверка наличия директории
 #ifndef LINUX
 	DWORD dwAttrib = GetFileAttributes(outputFolderPath.c_str());
 
 	if ((dwAttrib == INVALID_FILE_ATTRIBUTES) && (dwAttrib & FILE_ATTRIBUTE_DIRECTORY))
 	{
-#ifdef MY_DEBUG
 		std::cerr << "Exception \"Error finding folder\" "
 			"in void ImgPack(" << inputFolderPath << ", " << outputFolderPath << ")\n";
-#endif
+
 		throw "Error finding folder";
 	}
 
-	WIN32_FIND_DATA wfd;
+	FileStructureToSearch* fileStructuresToSearch;
+	unsigned long long generalSize(0);
 
-	HANDLE h(INVALID_HANDLE_VALUE);
-
-	h = FindFirstFile((inputFolderPath + (inputFolderPath.rfind("*") == std::string::npos ? "*" : "")).c_str(), &wfd);
-
-	if (h == INVALID_HANDLE_VALUE)
 	{
-#ifdef MY_DEBUG
-		std::cerr << "Exception \"The folder is empty\" "
-			"in void ImgPack(" << inputFolderPath << ", " << outputFolderPath << ")\n";
-#endif
-		throw "The folder is empty";
-	}
+		// Запись размерности файлов в массив
+		WIN32_FIND_DATA wfd;
 
-	do
-	{
-		if (!strcmp(wfd.cFileName, ".") || !strcmp(wfd.cFileName, ".."))
-		{
-			continue;
-		}
+		HANDLE h(INVALID_HANDLE_VALUE);
 
-		if(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		h = FindFirstFile((inputFolderPath + (inputFolderPath.rfind("*") == std::string::npos ? "*" : "")).c_str(), &wfd);
+
+		if (h == INVALID_HANDLE_VALUE)
 		{
-#ifdef MY_DEBUG
-			std::cerr << "Exception \"There is a folder in the folder\" "
+			std::cerr << "Exception \"The folder is empty\" "
 				"in void ImgPack(" << inputFolderPath << ", " << outputFolderPath << ")\n";
-#endif
-			throw "There is a folder in the folder";
+
+			throw "The folder is empty";
 		}
-
-		numberOfFiles++;
-
-		// В строку добавляем имена файлов
-		inputFileNamesStr += std::string(wfd.cFileName) + "/";
-	}while(FindNextFile(h, &wfd));
-
-	FindClose(h);
-
-	arraySizeInBlocks = new unsigned int[numberOfFiles];
-
-
-	// Запись размерности файлов в массив
-	h = FindFirstFile((inputFolderPath + (inputFolderPath.rfind("*") == std::string::npos ? "*" : "")).c_str(), &wfd);
-
-	if (h == INVALID_HANDLE_VALUE)
-	{
-#ifdef MY_DEBUG
-		std::cerr << "Exception \"The folder is empty\" "
-			"in void ImgPack(" << inputFolderPath << ", " << outputFolderPath << ")\n";
-#endif
-		throw "The folder is empty";
-	}
-
-	{
-		unsigned int index(0);
-		unsigned int size(0);
 
 		do
 		{
@@ -224,12 +187,38 @@ void ImgPack(std::string inputFolderPath, std::string outputFolderPath)
 				continue;
 			}
 
-			if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			if(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
-#ifdef MY_DEBUG
 				std::cerr << "Exception \"There is a folder in the folder\" "
 					"in void ImgPack(" << inputFolderPath << ", " << outputFolderPath << ")\n";
-#endif
+
+				throw "There is a folder in the folder";
+			}
+
+			numberOfFiles++;
+		}while(FindNextFile(h, &wfd));
+
+		FindClose(h);
+
+		// Инициализация массива вида ключ:значение
+		fileStructuresToSearch = new FileStructureToSearch[numberOfFiles];
+
+		unsigned int index(0);
+
+		h = FindFirstFile((inputFolderPath + (inputFolderPath.rfind("*") == std::string::npos ? "*" : "")).c_str(), &wfd);
+
+		do
+		{
+			if (!strcmp(wfd.cFileName, ".") || !strcmp(wfd.cFileName, ".."))
+			{
+				continue;
+			}
+
+			if(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			{
+				std::cerr << "Exception \"There is a folder in the folder\" "
+					"in void ImgPack(" << inputFolderPath << ", " << outputFolderPath << ")\n";
+
 				throw "There is a folder in the folder";
 			}
 
@@ -238,101 +227,62 @@ void ImgPack(std::string inputFolderPath, std::string outputFolderPath)
 			// size = (wfd.nFileSizeHigh * 0x0000000100000000) + wfd.nFileSizeLow;
 			// но файлы в img архиве в движке не превышают размер 127 мб
 
-			size = wfd.nFileSizeLow;
+			fileStructuresToSearch[index].m_size = wfd.nFileSizeLow % 2048 ? (unsigned short)(wfd.nFileSizeLow / 2048 + 1) : (unsigned short)(wfd.nFileSizeLow / 2048);
+			strcpy_s(fileStructuresToSearch[index].m_name, wfd.cFileName);
 
-			arraySizeInBlocks[index] = size % 2048 ? (unsigned short)(size / 2048 + 1) : (unsigned short)(size / 2048);
+			generalSize += fileStructuresToSearch[index].m_size;
 
 			++index;
-		} while (FindNextFile(h, &wfd));
+		}while(FindNextFile(h, &wfd));
+
+		FindClose(h);
 	}
-
-
-
 #else
-	// Переменные inputFileNamesStr, numberOfFiles уже объявлены выше их можно использовать
-	// В данном блоке кода достаточно посчитать количество файлов, так же в переменную inputFileNameStr
-	// запихать названия файлов чередуя их '/'
+	
 
 
 
 #endif
 
-
-
-	// Собираем имена ВСЕХ файлов в std::string[кол-во файлов]
-	inputFileNames = new std::string[numberOfFiles];
-	
-	// Парсим filesName и пихаем имена в массив
-	for (int i(0); i < numberOfFiles; ++i)
-	{
-		inputFileNamesStr.pop_back();
-		inputFileNames[i] = inputFileNamesStr.substr(inputFileNamesStr.rfind('/') + 1);
-		inputFileNamesStr = inputFileNamesStr.substr(0, inputFileNamesStr.rfind('/') + 1);
-	}
-
 	// Пишем количество файлов
 	output.writeUInt(numberOfFiles);
-
-	// Добавили байты для дерева файлов
-	output.insertBytes(32 * (unsigned long long)numberOfFiles);
-	
-	{
-		unsigned long long generalSize(0);
-
-		for (int i(0); i < numberOfFiles; ++i)
-		{
-			generalSize += arraySizeInBlocks[i];
-		}
-
-		// Добавили байты для данных
-		output.insertBytes(generalSize * 2048);
-	}
-
-	MyFile input;
-
-	unsigned int size(0);
 
 	// Сдвиг в блоках
 	unsigned int blockOffset(numberOfFiles * 32 + 8);
 	blockOffset = blockOffset % 2048 ? (unsigned short)(blockOffset / 2048 + 1) : (unsigned short)(blockOffset / 2048);
 
-	std::string tmpFileName;
+	// Добавили байты для данных и для дерева файлов
+	output.insertBytes(generalSize * 2048 + blockOffset * 2048 - 8); // "- 8" т.к. 8 байт уже записали в файл
+
+	MyFile input;
 
 	for (int i(0); i < numberOfFiles; ++i)
 	{
-		tmpFileName = inputFolderPath + inputFileNames[i];
-
-		size = MyFile::getSizeFile(tmpFileName);
-		
 		// Идем к голове файла к i-му файлу
 		output.goToByte((unsigned long long)i * 32 + 8);
 		
 		// Пишем в блоках
 		output.writeUInt(blockOffset);
-		output.writeUShort(arraySizeInBlocks[i]);
+		output.writeUShort(fileStructuresToSearch[i].m_size);
 		output.writeUShort(0); // Всегда 0
+		output.writeUCharP(fileStructuresToSearch[i].m_name, 24);
 		output.goToByte(blockOffset * 2048ULL);
 
 		// Качаем файл в кучу
-		input.copyDataFromFile(tmpFileName);
+		input.copyDataFromFile(inputFolderPath + fileStructuresToSearch[i].m_name);
 
-		output.writeUCharP(input.getPointerData(), size);
+		output.writeUCharP(input.getPointerData(), input.getSize());
 
-		blockOffset += arraySizeInBlocks[i];
+		blockOffset += fileStructuresToSearch[i].m_size;
 	}
 
 	inputFolderPath.pop_back();
 
 	output.copyDataToFile(outputFolderPath + inputFolderPath.substr(inputFolderPath.rfind("/") + 1) + ".img");
 
-	if (inputFileNames != nullptr)
+	if (fileStructuresToSearch != nullptr)
 	{
-		delete[] inputFileNames;
-	}
-
-	if (arraySizeInBlocks != nullptr)
-	{
-		delete[] arraySizeInBlocks; // Массив с размерами файлов в блоках
+		delete[] fileStructuresToSearch; // Массив с алфавитом
 	}
 #ifdef MY_DEBUG
 	std::clog << "void ImgPack(" << inputFolderPath << ", " << outputFolderPath << ")\n";

@@ -1,6 +1,7 @@
 #include "MyFile.hpp"
 
 #include <fstream>
+#include <windows.h>
 
 MyFile::MyFile() : m_size(0), m_index(0), m_data(nullptr)
 	/*Сначала списки инициализации, потом выполняется конструктор*/
@@ -44,10 +45,9 @@ void MyFile::copyDataFromFile(std::string fileName)
 
 		if (file == INVALID_HANDLE_VALUE)
 		{
-#ifdef MY_DEBUG
 			std::cerr << "Exception \"The file for some reason does not open\" "
 				"in void MyFile::copyDataFromFile(" << fileName << ")\n";
-#endif
+
 			throw "The file for some reason does not open";
 		}
 
@@ -76,10 +76,9 @@ void MyFile::copyDataFromFile(std::string fileName)
 
 		if (!file.is_open())
 		{
-#ifdef MY_DEBUG
 			std::cerr << "Exception \"The file for some reason does not open\" "
 				"in void MyFile::copyDataFromFile(" << fileName << ")\n";
-#endif
+
 			throw "The file for some reason does not open";
 		}
 
@@ -114,10 +113,9 @@ void MyFile::copyDataToFile(std::string fileName)
 	{
 		if (m_data == nullptr)
 		{
-#ifdef MY_DEBUG
 			std::cerr << "Exception \"Before writing a file, you must open this file in RAM\" "
 				"in void MyFile::copyDataToFile(" << fileName << ")\n";
-#endif
+
 			throw "The file for some reason does not open";
 		}
 
@@ -132,10 +130,9 @@ void MyFile::copyDataToFile(std::string fileName)
 
 		if (file == INVALID_HANDLE_VALUE)
 		{
-#ifdef MY_DEBUG
 			std::cerr << "Exception \"The file for some reason does not open\" "
 				"in void MyFile::copyDataToFile(" << fileName << ")\n";
-#endif
+
 			throw "The file for some reason does not open";
 		}
 
@@ -153,10 +150,9 @@ void MyFile::copyDataToFile(std::string fileName)
 
 		if (!file.is_open())
 		{
-#ifdef MY_DEBUG
 			std::cerr << "Exception \"The file for some reason does not open\" "
 				"in void MyFile::copyDataToFile(" << fileName << ")\n";
-#endif
+
 			throw "The file for some reason does not open";
 		}
 
@@ -450,10 +446,9 @@ unsigned long long MyFile::getSizeFile(std::string fileName)
 
 		if (file == INVALID_HANDLE_VALUE)
 		{
-#ifdef MY_DEBUG
 			std::cerr << "Exception \"Could not open file\" "
 				"in unsigned long long getSizeFile(" << fileName << ") in class \"MyFile\"\n";
-#endif
+
 			throw "Could not open file";
 		}
 
@@ -463,10 +458,9 @@ unsigned long long MyFile::getSizeFile(std::string fileName)
 
 		if (size.LowPart == 0 && size.HighPart == 0)
 		{
-#ifdef MY_DEBUG
 			std::cerr << "Exception \"Can not find out the file size\" "
 				"in unsigned long long getSizeFile(" << fileName << ") in class \"MyFile\"\n";
-#endif
+
 			throw "Can not find out the file size";
 		}
 
@@ -482,10 +476,9 @@ unsigned long long MyFile::getSizeFile(std::string fileName)
 
 		if (!file.is_open())
 		{
-#ifdef MY_DEBUG
 			std::cerr << "Exception \"Could not open file\" "
 				"in unsigned long long getSizeFile(" << fileName << ") in class \"MyFile\"\n";
-#endif
+
 			throw "Could not open file";
 		}
 
@@ -514,10 +507,9 @@ void MyFile::createData(unsigned long long count)
 {
 	if (count == 0)
 	{
-#ifdef MY_DEBUG
 		std::cerr << "Exception \"Cannot create an array of size 0\" "
 			"in void MyFile::createData(" << count << ")\n";
-#endif
+
 		throw "Cannot create an array of size 0";
 	}
 

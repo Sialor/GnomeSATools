@@ -6,10 +6,9 @@ Interface::Interface(int argc, char** argv) :
 {
 	if (argc < 4)
 	{
-#ifdef MY_DEBUG
 		std::cerr << "Exception \"Number of arguments less than 4\" "
 			"in Interface::Interface(" << argc << ", [PROGRAM ARGUMENTS])\n";
-#endif
+
 		throw "Number of arguments less than 4";
 	}
 
@@ -56,10 +55,9 @@ Interface::Interface(int argc, char** argv) :
 			}
 			else
 			{
-#ifdef MY_DEBUG
 				std::cerr << "Exception \"No such tool\" "
 					"in Interface::Interface(" << argc << ", [PROGRAM ARGUMENTS])\n";
-#endif
+
 				throw "No such tool";
 			}
 		}
@@ -75,10 +73,9 @@ Interface::Interface(int argc, char** argv) :
 			}
 			else
 			{
-#ifdef MY_DEBUG
 				std::cerr << "Exception \"No such command\" "
 					"in Interface::Interface(" << argc << ", [PROGRAM ARGUMENTS])\n";
-#endif
+
 				throw "No such command";
 			}
 		}
@@ -95,13 +92,11 @@ Interface::Interface(int argc, char** argv) :
 		}
 	}
 
-	// Отнимаем от общего кол-ва ргументов первые 3 и те самые параметры
+	// Отнимаем от общего кол-ва аргументов первые 3 и те самые параметры
 	m_numberOfFiles = argc - 3 - m_numberOfParams * 2;
 
 	// Список с именами входных файлов
 	m_inputPaths = new std::string[m_numberOfFiles];
-
-
 
 	m_numberOfParams = 0;
 
@@ -111,7 +106,6 @@ Interface::Interface(int argc, char** argv) :
 	{
 		tmp = argv[i];
 
-
 		// Обработка параметров
 		if (tmp == "-o")
 		{
@@ -120,10 +114,9 @@ Interface::Interface(int argc, char** argv) :
 			// Чтобы следующий аргумент был пропущен
 			if (i + 1 >= argc)
 			{
-#ifdef MY_DEBUG
 				std::cerr << "Exception \"No input folder path entered\" "
 					"in Interface::Interface(" << argc << ", [PROGRAM ARGUMENTS])\n";
-#endif
+
 				throw "No input folder path entered";
 			}
 			++i;
@@ -143,11 +136,10 @@ Interface::Interface(int argc, char** argv) :
 			if (m_command == UNPACK)
 			{
 				// ДОЛЖЕН БЫТЬ ВЫВОД ЧТО НЕ ВЕРНЫЕ АРГУМЕНТЫ И ПРОСТОЙ ВЫХОД (exit(1);) ИЗ ПРОГРАММЫ !!!!!!
-#ifdef MY_DEBUG
-				std::cerr << "Exception \"Invalid file extension\" "
+				std::cerr << "Exception \"Invalid cmd\" "
 					"in Interface::Interface(" << argc << ", [PROGRAM ARGUMENTS])\n";
-#endif
-				throw "Invalid file extension";
+
+				throw "Invalid cmd";
 			}
 			else if (m_command == PACK)
 			{

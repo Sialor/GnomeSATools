@@ -46,10 +46,9 @@ private:
 		// index == m_size - значит что чтение/запись происходит в "притык"
 		if (index > m_size)
 		{
-#ifdef MY_DEBUG
 			std::cerr << "Exception \"Overflow index\" "
 				"in void isIndexOverflow(" << index << ") in class \"MyFile\"\n";
-#endif
+
 			throw "Overflow index (m_index >= m_szie)";
 		}
 	}

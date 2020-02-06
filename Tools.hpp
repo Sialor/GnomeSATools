@@ -36,3 +36,10 @@ void ImgUnpack(std::string, std::string);
 // Принимает путь папки которую запаковываешь
 // и путь папки вывода
 void ImgPack(std::string, std::string);
+
+
+
+// Распаковка Txd архива
+// Принимает имя файла которое распаковываешь
+// и путь папки вывода
+void TxdUnpack(std::string, std::string);
